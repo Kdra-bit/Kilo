@@ -652,7 +652,7 @@ char* editorPrompt(char *prompt, void (*callback)(char *, int)) {
 }
 
 void editorShowHelpMessage() {
-	editorSetStatusMessage("Help: Ctrl-S save | Ctrl-Q quit | Ctrl-W find| Ctrl-h Help");
+	editorSetStatusMessage("Help: Ctrl-S save | Ctrl-Q quit | Ctrl-W find | Ctrl-G Help");
 }
 
 void editorMoveCursor(int key) {
@@ -727,7 +727,7 @@ void editorProcessKeyPress() {
 			editorSave();
 			break;
 
-		case CTRL_KEY('h'):
+		case CTRL_KEY('g'):
 			editorShowHelpMessage();
 			break;
 
@@ -745,6 +745,7 @@ void editorProcessKeyPress() {
 			break;
 
 		case BACKSPACE:
+		case CTRL_KEY('h'):
 		case DEL_KEY:
 			if (c == DEL_KEY) editorMoveCursor(ARROW_RIGHT);
 			editorDelChar();
