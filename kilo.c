@@ -1,4 +1,6 @@
-/* Author Kyle Draper */
+/* A modification of the KILO editor originally written by 
+   Salvatore "antirez" Sanfilippo.
+*/
 
 /*** includes ***/
 
@@ -1090,13 +1092,32 @@ void initEditor() {
 }	
 
 int main(int argc, char *argv[]) {
+
+	int j;
+	for (j = 1; j < argc - 1; j++) {
+		if (argv[j][0] == '-') {
+			switch (argv[j][1]) {
+				case 'V':
+					printf("KILO version %s\n\nOrginally Written by "
+							"Salvatore \"antirez\" Sanfilippo\nreleased under the BSD 2-Clause\n\n", KILO_VERSION);
+					return 0;
+					break;
+				case 'h':
+					printf("kilo [FILE]\n\n-V - Version\n-h - Help\n");
+					return 0;
+					break;
+			}
+		}
+
+	}
+
 	enablerawmode();
 	initEditor();
 
-	if (argc >= 2) {
-		editorOpen(argv[1]);
+	if (argc >= 2)	{
+		editorOpen(argv[1]);					
 	}
-
+	
 	editorShowHelpMessage();
 
 	while (1) {
