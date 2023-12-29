@@ -23,7 +23,7 @@
 
 /*** defines ***/
 
-#define KILO_VERSION "0.0.1"
+#define KILO_VERSION "0.0.2"
 #define KILO_TAB_STOP 8
 #define KILO_QUIT_TIMES 3
 
@@ -889,7 +889,7 @@ void editorSetStatusMessage(const char *fmt, ...) {
 
 /*** input ***/
 
-char* editorPrompt(char *prompt, void (*callback)(char *, int)) {
+char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
 	size_t bufsize = 128;
 	char *buf = malloc(bufsize);
 
@@ -929,6 +929,35 @@ char* editorPrompt(char *prompt, void (*callback)(char *, int)) {
 
 void editorShowHelpMessage() {
 	editorSetStatusMessage("Help: Ctrl-S save | Ctrl-Q quit | Ctrl-W find | Ctrl-G Help");
+}
+
+void editorGotoPosition() {
+	char *query;
+	query = editorPrompt("goto-line: %s", NULL);
+
+	if (query) {
+		int len = strlen(query);
+		int linenum;
+
+		int j; 
+		int num = 1;
+		for (j = 0; j < len; j++) {
+			if (!isdigit(query[j])) {
+				num = 0;
+				editorSetStatusMessage("ERROR NAN");
+				break;
+			}
+		}
+
+		if (num) {
+			linenum = atoi(query);
+			if (linenum > E.numrows)
+				linenum = E.numrows + 1;
+			E.cy = linenum - 1;
+		}
+			
+		free(query);
+	}
 }
 
 void editorMoveCursor(int key) {
@@ -1020,6 +1049,10 @@ void editorProcessKeyPress() {
 		
 		case CTRL_KEY('w'):
 			editorFind();
+			break;
+
+		case CTRL_KEY('u'):
+			editorGotoPosition();
 			break;
 
 		case BACKSPACE:
