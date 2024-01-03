@@ -1157,12 +1157,12 @@ void initEditor() {
 int main(int argc, char *argv[]) {
 
 	int j;
-	for (j = 1; j < argc - 1; j++) {
+	for (j = 1; j < argc; j++) {
 		if (argv[j][0] == '-') {
 			switch (argv[j][1]) {
 				case 'V':
-					printf("KILO version %s\n\nOrginally Written by "
-							"Salvatore \"antirez\" Sanfilippo\nreleased under the BSD 2-Clause\n\n", KILO_VERSION);
+					printf("KILO version %s\n\n"
+							"Copyright (c) 2024, Kyle Draper\nCopyright (c) 2016, Salvatore Sanfilippo <antirez at gmail dot com>\n\nreleased under the BSD 2-Clause\n\n", KILO_VERSION);
 					return 0;
 					break;
 				case 'h':
@@ -1170,6 +1170,7 @@ int main(int argc, char *argv[]) {
 					return 0;
 					break;
 			}
+
 		}
 
 	}
@@ -1190,3 +1191,4 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
+

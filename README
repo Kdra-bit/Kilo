@@ -1,0 +1,6 @@
+Kilo is an application orginally written by Salvatore Sanfilippo to be a simple
+text editor under a 1000 lines of code. 
+
+------ Building ------
+	$make
+	#make install
