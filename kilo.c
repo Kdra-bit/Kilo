@@ -85,6 +85,8 @@ struct editorConfig {
 	int screenrows;
 	int screencols;
 	int numrows;
+	int dislinenums;
+	int linenumoff;
 	erow *row;
 	int dirty;
 	char *filename;
@@ -355,7 +357,6 @@ void editorUpdateSyntax(erow *row) {
 		prev_sep = is_separator(c);
 		i++;
 	}
-
 	int changed = (row->hl_open_comment != in_comment);
 	row->hl_open_comment = in_comment;
 	if (changed && row->idx + 1 < E.numrows)
@@ -408,10 +409,16 @@ void editorSelectSyntaxHighlight() {
 int editorRowCxToRx(erow *row, int cx)
 {
 	int rx = 0;
+
+	if (E.dislinenums) {
+		rx += E.linenumoff;
+	}
+
 	int j;
 	for (j = 0; j < cx; j++) {
+
 		if (row->chars[j] == '\t')
-			rx += (KILO_TAB_STOP - 1) - (rx % KILO_TAB_STOP);
+			rx += (KILO_TAB_STOP + E.linenumoff - 1) - (rx % KILO_TAB_STOP);
 		rx++;
 	}
 	return rx;
@@ -443,7 +450,7 @@ void editorUpdateRow(erow *row) {
 }
 
 int editorRowRxToCx(erow* row, int rx) {
-	int cur_rx = 0;
+	int cur_rx = E.linenumoff;
 	int cx;
 	for (cx = 0; cx < row->size; cx++) {
 		if (row->chars[cx] == '\t')
@@ -744,7 +751,7 @@ void editorDrawStatusBar(struct abuf *ab) {
 	int len = snprintf(status, sizeof(status), "%.20s - %d lines %s",
 			E.filename ? E.filename : "[No Name]", E.numrows,
 			E.dirty ? "(modified)" : "");
-	int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d", 
+	int rlen = snprintf(rstatus, sizeof(rstatus), "%s |  %d/%d", 
 			E.syntax ? E.syntax->filetype : "no ft", E.cy + 1, E.numrows);
 	if (len > E.screencols) len = E.screencols;
 	abAppend(ab, status, len);
@@ -763,6 +770,7 @@ void editorDrawStatusBar(struct abuf *ab) {
 
 void editorScroll() {
 	E.rx = 0;
+		
 	if (E.cy < E.numrows) {
 		E.rx = editorRowCxToRx(&E.row[E.cy], E.cx);
 	}
@@ -773,8 +781,8 @@ void editorScroll() {
 	if (E.cy >= E.rowoff + E.screenrows) {
 		E.rowoff = E.cy - E.screenrows + 1;
 	}
-	if (E.rx < E.coloff) {
-		E.coloff = E.rx;
+	if (E.rx < E.coloff + E.linenumoff ) {
+		E.coloff = E.rx - E.linenumoff;
 	}
 	if (E.rx >= E.coloff + E.screencols) {
 		E.coloff = E.rx - E.screencols + 1;
@@ -804,11 +812,25 @@ void editorDrawRows(struct abuf *ab) {
 		} else {
 			int len = E.row[filerow].rsize - E.coloff;
 			if (len < 0) len = 0;
-			if (len > E.screencols) len = E.screencols;
+			if (len > E.screencols - E.linenumoff) len = E.screencols - E.linenumoff;
 			char *c  = &E.row[filerow].render[E.coloff];
+			char dlinenum[16];
 			unsigned char *hl = &E.row[filerow].hl[E.coloff];
 			int current_color = -1;
+			int i;
 			int j;
+			
+			if (E.dislinenums) {
+				E.linenumoff = snprintf(dlinenum, sizeof(dlinenum), "%d", E.numrows) + 2;
+				int snumlen = snprintf(dlinenum, sizeof(dlinenum),  "%d", filerow);
+				abAppend(ab, " ", 1);
+				for (i = 0; i < E.linenumoff - snumlen - 2; i++) {
+					abAppend(ab, " ", 1);
+				}
+				abAppend(ab, dlinenum, snumlen);
+				abAppend(ab, " ", 1);
+
+			}
 			for (j = 0; j < len; j++) {
 				if (iscntrl(c[j])) {
 					char sym = (c[j] <= 26) ? '@' + c[j] : '?';
@@ -928,7 +950,7 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
 }
 
 void editorShowHelpMessage() {
-	editorSetStatusMessage("Help: Ctrl-S save | Ctrl-Q quit | Ctrl-W find | Ctrl-G Help");
+	editorSetStatusMessage("Help: Ctrl-S save | Ctrl-Q quit | Ctrl-W find | Ctrl-U GOTO | Ctrl-G Help");
 }
 
 void editorGotoPosition() {
@@ -1055,6 +1077,12 @@ void editorProcessKeyPress() {
 			editorGotoPosition();
 			break;
 
+		case CTRL_KEY('o'):
+			E.dislinenums = !E.dislinenums;
+			E.linenumoff = 0;
+			editorRefreshScreen();
+			break;
+
 		case BACKSPACE:
 		case CTRL_KEY('h'):
 		case DEL_KEY:
@@ -1113,6 +1141,8 @@ void initEditor() {
 	E.rowoff = 0;
 	E.coloff = 0;
 	E.numrows = 0;
+	E.dislinenums = 0;
+	E.linenumoff = 0;
 	E.row = NULL;
 	E.dirty = 0;
 	E.filename = NULL;
