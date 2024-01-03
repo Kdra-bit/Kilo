@@ -781,8 +781,9 @@ void editorScroll() {
 	if (E.cy >= E.rowoff + E.screenrows) {
 		E.rowoff = E.cy - E.screenrows + 1;
 	}
-	if (E.rx < E.coloff + E.linenumoff ) {
+	if (E.rx < E.coloff + E.linenumoff) {
 		E.coloff = E.rx - E.linenumoff;
+		if (E.coloff < 0) E.coloff = 0;
 	}
 	if (E.rx >= E.coloff + E.screencols) {
 		E.coloff = E.rx - E.screencols + 1;
@@ -821,14 +822,16 @@ void editorDrawRows(struct abuf *ab) {
 			int j;
 			
 			if (E.dislinenums) {
+				
 				E.linenumoff = snprintf(dlinenum, sizeof(dlinenum), "%d", E.numrows) + 2;
 				int snumlen = snprintf(dlinenum, sizeof(dlinenum),  "%d", filerow);
 				abAppend(ab, " ", 1);
 				for (i = 0; i < E.linenumoff - snumlen - 2; i++) {
 					abAppend(ab, " ", 1);
-				}
+				} 
 				abAppend(ab, dlinenum, snumlen);
 				abAppend(ab, " ", 1);
+				
 
 			}
 			for (j = 0; j < len; j++) {
